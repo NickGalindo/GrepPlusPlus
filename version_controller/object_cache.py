@@ -86,7 +86,7 @@ class MyHandler(FileSystemEventHandler):
 
     def initialize_cache_dir(self, cache_dir):
         current_dir = os.getcwd()
-        grep_plus_plus_dir = os.path.join(current_dir, 'grep++')
+        grep_plus_plus_dir = os.path.join(current_dir, '.grep++')
 
         if not os.path.exists(grep_plus_plus_dir):
             os.makedirs(grep_plus_plus_dir)
@@ -103,7 +103,12 @@ class MyHandler(FileSystemEventHandler):
         script_name = os.path.basename(__file__)  # Get the script file name
 
         for root, _, files in os.walk(monitored_dir):
+            if 'grep_plus_plus_ignore' in root:
+                continue  # Skip files in 'grep_plus_plus_ignore' directory
             for file in files:
+                if not file.endswith('.py'):
+                    continue  # Only monitor .py files
+
                 file_path_abs = os.path.abspath(os.path.join(root, file))
                 if file_path_abs == os.path.abspath(__file__):
                     continue  # Skip the script file itself
@@ -153,9 +158,9 @@ class MyHandler(FileSystemEventHandler):
         print("="*40)
 
     def create_or_update_json_file(self, file_path, name, size, hash_sha256, hash_xxhash):
-        json_filename = os.path.join(self.cache_dir, f"{name[:-3]}.json")
+        json_filename = os.path.join(self.cache_dir, f"{hash_xxhash}.json")
         data = {
-            "path": file_path.replace("\\", "/"),  # Replace backslashes with forward slashes
+            "path": file_path,  # Replace backslashes with forward slashes
             "name": name,
             "size": size,
             "hash_sha256": hash_sha256,
@@ -169,8 +174,8 @@ class MyHandler(FileSystemEventHandler):
             print(f"PermissionError: Could not write to {json_filename}. Skipping.")
 
     def delete_json_file(self, file_path):
-        name = os.path.basename(file_path)
-        json_filename = os.path.join(self.cache_dir, f"{name[:-3]}.json")
+        file_hash = self.calculate_xxhash(file_path)
+        json_filename = os.path.join(self.cache_dir, f"{file_hash}.json")
         if os.path.exists(json_filename):
             try:
                 os.remove(json_filename)
@@ -187,10 +192,10 @@ class MyHandler(FileSystemEventHandler):
         return xxhash_hasher
 
     def on_created(self, event):
-        if not event.is_directory:
+        if not event.is_directory and event.src_path.endswith('.py'):
             file_path = os.path.normpath(event.src_path)
             file_path_abs = os.path.abspath(file_path)
-            if file_path_abs.startswith(self.cache_dir):
+            if file_path_abs.startswith(self.cache_dir) or 'grep_plus_plus_ignore' in file_path_abs:
                 return
             if file_path_abs not in self.files_info:
                 hash_sha256 = self.calculate_sha256(file_path_abs)
@@ -207,10 +212,10 @@ class MyHandler(FileSystemEventHandler):
                 self.print_and_send_file_info(file_path_abs)
 
     def on_modified(self, event):
-        if not event.is_directory:
+        if not event.is_directory and event.src_path.endswith('.py'):
             file_path = os.path.normpath(event.src_path)
             file_path_abs = os.path.abspath(file_path)
-            if file_path_abs.startswith(self.cache_dir):
+            if file_path_abs.startswith(self.cache_dir) or 'grep_plus_plus_ignore' in file_path_abs:
                 return
             if file_path_abs in self.files_info:
                 self.files_info[file_path_abs]['size'] = os.path.getsize(file_path_abs)
@@ -222,10 +227,10 @@ class MyHandler(FileSystemEventHandler):
                 self.print_and_send_file_info(file_path_abs)
 
     def on_deleted(self, event):
-        if not event.is_directory:
+        if not event.is_directory and event.src_path.endswith('.py'):
             file_path = os.path.normpath(event.src_path)
             file_path_abs = os.path.abspath(file_path)
-            if file_path_abs.startswith(self.cache_dir):
+            if file_path_abs.startswith(self.cache_dir) or 'grep_plus_plus_ignore' in file_path_abs:
                 return
             if file_path_abs in self.files_info:
                 self.delete_json_file(file_path_abs)
@@ -246,7 +251,7 @@ class MyHandler(FileSystemEventHandler):
                 token_list.append((tokens, line_number, line.strip()))
 
             file_info = {
-                "path": file_path.replace("\\", "/"),
+                "path": file_path,
                 "tokens": token_list
             }
             print(json.dumps(file_info, indent=4, ensure_ascii=False))

@@ -251,6 +251,7 @@ class MyHandler(FileSystemEventHandler):
                 token_list.append((tokens, line_number, line.strip()))
 
             file_info = {
+                "directory": os.getcwd(),
                 "path": file_path,
                 "tokens": token_list
             }
@@ -300,6 +301,7 @@ class MyHandler(FileSystemEventHandler):
 
     def print_and_send_file_deleted(self, file_path):
         file_info = {
+            "directory": os.getcwd(),
             "path": file_path
         }
         print(json.dumps(file_info, indent=4, ensure_ascii=False))

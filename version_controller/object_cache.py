@@ -14,6 +14,7 @@ from watchdog.events import FileSystemEventHandler
 # Define mappings for token types
 KEYWORDS = {
     'def': 'DEF',
+    'print': 'PRINT',
     'if': 'IF',
     'else': 'ELSE',
     'elif': 'ELIF',
@@ -144,6 +145,8 @@ class MyHandler(FileSystemEventHandler):
                             original_file_path = data['path']
                         if not os.path.exists(original_file_path):
                             os.remove(json_file_path)
+                            print(original_file_path)
+                            self.print_and_send_file_deleted(original_file_path)
                             print(f"Orphaned JSON file deleted: {json_file_path}")
                     except PermissionError:
                         print(f"PermissionError: Could not access {json_file_path}. Skipping.")
@@ -155,6 +158,7 @@ class MyHandler(FileSystemEventHandler):
     def update_files_info(self):
         for path, info in self.files_info.items():
             print(f"Path: {path}, Name: {info['name']}, Size: {info['size']} bytes, SHA256: {info['hash_sha256']}, XXHash: {info['hash_xxhash']}")
+            self.print_and_send_file_info(path)
         print("="*40)
 
     def create_or_update_json_file(self, file_path, name, size, hash_sha256, hash_xxhash):
@@ -256,7 +260,7 @@ class MyHandler(FileSystemEventHandler):
                 "tokens": token_list
             }
             print(json.dumps(file_info, indent=4, ensure_ascii=False))
-            self.send_info_to_server(file_info)
+            self.send_info_to_server(file_info, False)
         except Exception as e:
             print(f"Error reading file {file_path}: {e}")
 
@@ -305,11 +309,17 @@ class MyHandler(FileSystemEventHandler):
             "path": file_path
         }
         print(json.dumps(file_info, indent=4, ensure_ascii=False))
-        self.send_info_to_server(file_info)
+        self.send_info_to_server(file_info, True)
 
-    def send_info_to_server(self, data):
+    def send_info_to_server(self, data, delete):
         try:
-            response = requests.post("http://localhost:8002", json=data)
+            linkTo = ""
+            if delete:
+                linkTo = "http://localhost:8002/delete"
+            else:
+                linkTo = "http://localhost:8002/update"
+                
+            response = requests.post(linkTo, json=data)
             if response.status_code == 200:
                 print(f"Data successfully sent to server: {data}")
             else:

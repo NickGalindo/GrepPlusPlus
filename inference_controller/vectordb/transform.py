@@ -10,7 +10,6 @@ def __transform(sentence: str, model: SentenceTransformer) -> np.ndarray:
 
     return res
 
-# TODO: Implement
 def __bagging(tokens: List[str]) -> np.ndarray:
     return np.zeros([768])
 

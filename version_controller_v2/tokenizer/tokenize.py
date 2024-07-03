@@ -80,10 +80,12 @@ def tokenize_lines(doc: str, split_doc: List[str]):
         if tokenize.tok_name[token.exact_type] == "NL" or tokenize.tok_name[token.exact_type] == "INDENT" or tokenize.tok_name[token.exact_type] == "DEDENT" or tokenize.tok_name[token.exact_type] == "ENCODING":
             continue
 
-        if tokenize.tok_name[token.exact_type] == "NEWLINE" or tokenize.tok_name[token.exact_type] == "ENDMARKER":
+        if tokenize.tok_name[token.exact_type] == "NEWLINE":
             codeline: str = ""
             to = token.end[0]
+            print(split_doc)
             while fr <= to:
+                print(fr-1)
                 codeline += " " + split_doc[fr-1].strip()
                 fr += 1
 

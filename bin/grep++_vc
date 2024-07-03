@@ -1,0 +1,4 @@
+#!/bin/bash
+GREPPP_DIR="$(dirname "$(readlink -f "$0")")"
+PARENT_DIR="$(dirname "$GREPPP_DIR")"
+$PARENT_DIR/env/bin/python $PARENT_DIR/version_controller_v2/main.py

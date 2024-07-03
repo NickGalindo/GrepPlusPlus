@@ -17,7 +17,7 @@ KEYWORDS = {
     'print': 'PRINT',
     'if': 'IF',
     'else': 'ELSE',
-    'elif': 'ELIF',
+    'elif': 'ELSE_IF',
     'for': 'FOR',
     'while': 'WHILE',
     'try': 'TRY',
@@ -51,9 +51,9 @@ LITERALS = {
 
 PUNCTUATIONS = {
     tokenize.LPAR: 'LEFT_PARENTHESIS',
-    tokenize.RPAR: 'RIGHT_PARENTHSIS',
-    tokenize.LSQB: 'LEFT_SQ_BRACKET',
-    tokenize.RSQB: 'RIGHT_SQ_BRACKET',
+    tokenize.RPAR: 'RIGHT_PARENTHESIS',
+    tokenize.LSQB: 'LEFT_SQUARE_BRACKET',
+    tokenize.RSQB: 'RIGHT_SQUARE_BRACKET',
     tokenize.COLON: 'COLON',
     tokenize.COMMA: 'COMMA',
     tokenize.SEMI: 'SEMICOLON',
